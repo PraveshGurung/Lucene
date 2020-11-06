@@ -166,9 +166,9 @@ public class IndexFiles {
 
             // Add the path of the file as a field named "path".  Use a
             // field that is indexed (i.e. searchable), but don't tokenize
-            // the field into separate words and don't index term frequency
+            // the field into separate words and don't index term frequency <-do index term frequence and positional information
             // or positional information:
-            Field pathField = new StringField("path", file.getFileName().toString(), Field.Store.YES);
+            Field pathField = new TextField("path", file.getFileName().toString(), Field.Store.NO);
             doc.add(pathField);
 
             // Add the last modified date of the file a field named "modified".
