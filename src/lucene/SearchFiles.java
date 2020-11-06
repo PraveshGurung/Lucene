@@ -36,6 +36,7 @@ import org.apache.lucene.search.*;
 import org.apache.lucene.search.similarities.BM25Similarity;
 import org.apache.lucene.search.similarities.ClassicSimilarity;
 import org.apache.lucene.search.spell.DirectSpellChecker;
+import org.apache.lucene.search.spell.SuggestWord;
 import org.apache.lucene.store.FSDirectory;
 
 /** Simple command-line based search demo. */
@@ -169,8 +170,8 @@ public class SearchFiles {
             if (query instanceof TermQuery)
             {
                 DirectSpellChecker checker = new DirectSpellChecker();
-                var terms=((TermQuery) query).getTerm();
-                var similar=checker.suggestSimilar(terms,1, searcher.getIndexReader());
+                Term terms=((TermQuery) query).getTerm();
+                SuggestWord[] similar=checker.suggestSimilar(terms,1, searcher.getIndexReader());
                 if (similar.length>0){
                     System.out.println("Do you mean : "+similar[0].string+" ?");
                 }
