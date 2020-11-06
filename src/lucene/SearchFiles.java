@@ -128,8 +128,9 @@ public class SearchFiles {
                 break;
             }
 
+            line = "title:" + line + " OR contents:" + line;
             Query query = parser.parse(line);
-            System.out.println("Searching for: " + query.toString(field));
+            System.out.println("Searching for: " + query.toString());
 
             if (repeat > 0) {                           // repeat & time as benchmark
                 Date start = new Date();
@@ -209,13 +210,10 @@ public class SearchFiles {
                 //}
 
                 Document doc = searcher.doc(hits[i].doc);
-                String path = doc.get("path");
+                String path = doc.get("title");
                 if (path != null) {
                     System.out.println((i+1) + ". " +"SCORE="+hits[i].score+" "+path);
                     String title = doc.get("title");
-                    if (title != null) {
-                        System.out.println("   Title: " + doc.get("title"));
-                    }
                 } else {
                     System.out.println((i+1) + ". " + "No path for this document");
                 }
