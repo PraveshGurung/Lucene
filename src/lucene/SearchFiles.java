@@ -32,6 +32,7 @@ import org.apache.lucene.document.Document;
 import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.Term;
+import org.apache.lucene.queryparser.classic.MultiFieldQueryParser;
 import org.apache.lucene.queryparser.classic.QueryParser;
 import org.apache.lucene.search.*;
 import org.apache.lucene.search.similarities.BM25Similarity;
@@ -89,7 +90,6 @@ public class SearchFiles {
                 i++;
             }
         }
-
         IndexReader reader = DirectoryReader.open(FSDirectory.open(Paths.get(index)));
         IndexSearcher searcher = new IndexSearcher(reader);
         Scanner myObj = new Scanner(System.in);  // Create a Scanner object
@@ -111,7 +111,7 @@ public class SearchFiles {
         } else {
             in = new BufferedReader(new InputStreamReader(System.in, StandardCharsets.UTF_8));
         }
-        QueryParser parser = new QueryParser(field, analyzer);
+        QueryParser parser = new MultiFieldQueryParser(new String[]{"title","contents"},analyzer);
         while (true) {
             if (queries == null && queryString == null) {                        // prompt the user
                 System.out.println("Enter query: ");
@@ -128,7 +128,6 @@ public class SearchFiles {
                 break;
             }
 
-            line = "title:" + line + " OR contents:" + line;
             Query query = parser.parse(line);
             System.out.println("Searching for: " + query.toString());
 
