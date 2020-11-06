@@ -28,11 +28,13 @@ import org.apache.lucene.search.similarities.BM25Similarity;
 import org.apache.lucene.search.similarities.ClassicSimilarity;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
+import org.w3c.dom.Node;
+import org.xml.sax.SAXException;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
@@ -48,7 +50,7 @@ public class IndexFiles {
     private IndexFiles() {}
 
     /** Index all text files under a directory. */
-    public static void main(String[] args) {
+    public static void main(String[] args) throws ParserConfigurationException, IOException, SAXException {
         String usage = "java org.apache.lucene.demo.IndexFiles"
                 + " [-index INDEX_PATH] [-docs DOCS_PATH] [-update]\n\n"
                 + "This indexes the documents in DOCS_PATH, creating a Lucene index"
@@ -72,6 +74,22 @@ public class IndexFiles {
             System.err.println("Usage: " + usage);
             System.exit(1);
         }
+
+//        --experiment with xml
+//        File file = new File("./src/lucene/dataset/post.xml");
+//
+//        DocumentBuilder dBuilder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
+//
+//        org.w3c.dom.Document doc = dBuilder.parse(file);
+//
+//        System.out.println("Root element :" + doc.getDocumentElement().getNodeName());
+//        var list=doc.getElementsByTagName("row");
+//        // nodeList is not iterable, so we are using for loop
+//        for (int itr = 0; itr < list.getLength(); itr++) {
+//            Node post = list.item(itr);
+//            System.out.println( post.getAttributes().getNamedItem("Body").toString());
+//        }
+
 
         final Path docDir = Paths.get(docsPath);
         if (!Files.isReadable(docDir)) {
