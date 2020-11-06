@@ -24,6 +24,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Date;
+import java.util.Scanner;  // Import the Scanner class
 
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
@@ -91,8 +92,17 @@ public class SearchFiles {
 
         IndexReader reader = DirectoryReader.open(FSDirectory.open(Paths.get(index)));
         IndexSearcher searcher = new IndexSearcher(reader);
-        searcher.setSimilarity(new ClassicSimilarity()); //tfidf
-        //searcher.setSimilarity(new BM25Similarity()); //Okapi BM25
+        Scanner myObj = new Scanner(System.in);  // Create a Scanner object
+        System.out.println("Press a number to choose a document ranking model: 1:tfidf 2:Okapi BM25 other:default (Boolean?)");
+
+        String model = myObj.nextLine();  // Read user input
+        if (model.equals("1")){
+            searcher.setSimilarity(new ClassicSimilarity()); //tfidf
+        }
+        else if (model.equals("2")){
+            searcher.setSimilarity(new BM25Similarity()); //Okapi BM25
+        }
+
         Analyzer analyzer = new StandardAnalyzer();
 
         BufferedReader in = null;

@@ -86,7 +86,9 @@ public class IndexFiles {
             Directory dir = FSDirectory.open(Paths.get(indexPath));
             Analyzer analyzer = new StandardAnalyzer();
             IndexWriterConfig iwc = new IndexWriterConfig(analyzer);
-            iwc.setSimilarity(new ClassicSimilarity()); //tfidf
+
+            //denk niet dat het hier per se moet, enkel in search is voldoende maybe
+            //iwc.setSimilarity(new ClassicSimilarity()); //tfidf
             //iwc.setSimilarity(new BM25Similarity()); //Okapi BM25
 
             if (create) {
