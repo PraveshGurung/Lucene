@@ -190,7 +190,7 @@ public class IndexFiles {
             // field that is indexed (i.e. searchable), but don't tokenize
             // the field into separate words and don't index term frequency <-do index term frequence and positional information
             // or positional information:
-            Field pathField = new TextField("path", file.getFileName().toString(), Field.Store.YES);
+            Field pathField = new TextField("title", file.getFileName().toString(), Field.Store.YES);
             doc.add(pathField);
 
             // Add the last modified date of the file a field named "modified".
@@ -223,7 +223,7 @@ public class IndexFiles {
                 // we use updateDocument instead to replace the old one matching the exact
                 // path, if present:
                 System.out.println("updating " + file);
-                writer.updateDocument(new Term("path", file.toString()), doc);
+                writer.updateDocument(new Term("title", file.toString()), doc);
             }
         }
     }
