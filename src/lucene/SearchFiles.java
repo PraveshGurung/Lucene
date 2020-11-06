@@ -30,12 +30,11 @@ import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.IndexReader;
+import org.apache.lucene.index.Term;
 import org.apache.lucene.queryparser.classic.QueryParser;
-import org.apache.lucene.search.IndexSearcher;
-import org.apache.lucene.search.Query;
-import org.apache.lucene.search.ScoreDoc;
-import org.apache.lucene.search.TopDocs;
+import org.apache.lucene.search.*;
 import org.apache.lucene.search.similarities.ClassicSimilarity;
+import org.apache.lucene.search.spell.DirectSpellChecker;
 import org.apache.lucene.store.FSDirectory;
 
 /** Simple command-line based search demo. */
@@ -137,6 +136,8 @@ public class SearchFiles {
         reader.close();
     }
 
+
+
     /**
      * This demonstrates a typical paging search scenario, where the search engine presents
      * pages of size n to the user. The user can then go to the next page if interested in
@@ -160,6 +161,19 @@ public class SearchFiles {
 
         int start = 0;
         int end = Math.min(numTotalHits, hitsPerPage);
+
+        if(numTotalHits==0){
+            //start spellChecking
+            if (query instanceof TermQuery)
+            {
+                DirectSpellChecker checker = new DirectSpellChecker();
+                var terms=((TermQuery) query).getTerm();
+                var similar=checker.suggestSimilar(terms,1, searcher.getIndexReader());
+                if (similar.length>0){
+                    System.out.println("Do you mean : "+similar[0].string+" ?");
+                }
+            }
+        }
 
         while (true) {
             if (end > hits.length) {
