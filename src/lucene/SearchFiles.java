@@ -35,6 +35,7 @@ import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.ScoreDoc;
 import org.apache.lucene.search.TopDocs;
+import org.apache.lucene.search.similarities.BM25Similarity;
 import org.apache.lucene.search.similarities.ClassicSimilarity;
 import org.apache.lucene.store.FSDirectory;
 
@@ -90,6 +91,8 @@ public class SearchFiles {
 
         IndexReader reader = DirectoryReader.open(FSDirectory.open(Paths.get(index)));
         IndexSearcher searcher = new IndexSearcher(reader);
+        searcher.setSimilarity(new ClassicSimilarity()); //tfidf
+        //searcher.setSimilarity(new BM25Similarity()); //Okapi BM25
         searcher.setSimilarity(new ClassicSimilarity());
         Analyzer analyzer = new StandardAnalyzer();
 
