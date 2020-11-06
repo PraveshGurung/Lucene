@@ -88,7 +88,6 @@ public class IndexFiles {
             IndexWriterConfig iwc = new IndexWriterConfig(analyzer);
             iwc.setSimilarity(new ClassicSimilarity()); //tfidf
             //iwc.setSimilarity(new BM25Similarity()); //Okapi BM25
-            iwc.setSimilarity(new ClassicSimilarity());
 
             if (create) {
                 // Create a new index in the directory, removing any

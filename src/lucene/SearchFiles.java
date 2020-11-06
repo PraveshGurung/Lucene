@@ -33,10 +33,6 @@ import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.queryparser.classic.QueryParser;
 import org.apache.lucene.search.*;
-import org.apache.lucene.search.IndexSearcher;
-import org.apache.lucene.search.Query;
-import org.apache.lucene.search.ScoreDoc;
-import org.apache.lucene.search.TopDocs;
 import org.apache.lucene.search.similarities.BM25Similarity;
 import org.apache.lucene.search.similarities.ClassicSimilarity;
 import org.apache.lucene.search.spell.DirectSpellChecker;
@@ -96,7 +92,6 @@ public class SearchFiles {
         IndexSearcher searcher = new IndexSearcher(reader);
         searcher.setSimilarity(new ClassicSimilarity()); //tfidf
         //searcher.setSimilarity(new BM25Similarity()); //Okapi BM25
-        searcher.setSimilarity(new ClassicSimilarity());
         Analyzer analyzer = new StandardAnalyzer();
 
         BufferedReader in = null;
@@ -197,15 +192,15 @@ public class SearchFiles {
             end = Math.min(hits.length, start + hitsPerPage);
 
             for (int i = start; i < end; i++) {
-                if (raw) {                              // output raw format
-                    System.out.println("doc="+hits[i].doc+" score="+hits[i].score);
-                    continue;
-                }
+                //if (raw) {                              // output raw format
+                //System.out.println("doc="+hits[i].doc+" score="+hits[i].score);
+                    //continue;
+                //}
 
                 Document doc = searcher.doc(hits[i].doc);
                 String path = doc.get("path");
                 if (path != null) {
-                    System.out.println((i+1) + ". " + path);
+                    System.out.println((i+1) + ". " +"SCORE="+hits[i].score+" "+path);
                     String title = doc.get("title");
                     if (title != null) {
                         System.out.println("   Title: " + doc.get("title"));
