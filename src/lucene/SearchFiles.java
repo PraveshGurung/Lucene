@@ -236,6 +236,9 @@ public class SearchFiles {
                     if (start + hitsPerPage < numTotalHits) {
                         System.out.print("(n)ext page, ");
                     }
+                    if(numTotalHits >= 0){
+                        System.out.print("(r)ead+document ID (r1,r2..), ");
+                    }
                     System.out.println("(q)uit or enter number to jump to a page.");
 
                     String line = in.readLine();
@@ -251,7 +254,21 @@ public class SearchFiles {
                             start+=hitsPerPage;
                         }
                         break;
-                    } else {
+                    }else if(line.charAt(0)=='r'){
+                        try{
+                            line=line.substring(1);
+                            Integer doc= Integer.parseInt(line);
+                            if(doc==0){
+                                throw new Exception("g");
+                            }
+                            String content=searcher.doc(hits[doc-1].doc).get("contents").toString();
+                            System.out.println("The content of the document is : ");
+                            System.out.println(content);
+                        }catch (Exception e){
+                            System.out.println("couldn't retrieve the given file");
+                        }
+                    }
+                    else {
                         int page = Integer.parseInt(line);
                         if ((page - 1) * hitsPerPage < numTotalHits) {
                             start = (page - 1) * hitsPerPage;
