@@ -29,6 +29,7 @@ import org.apache.lucene.search.similarities.ClassicSimilarity;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
 import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
 import javax.xml.parsers.DocumentBuilder;
@@ -39,6 +40,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Date;
+import java.util.function.Function;
 
 /** Index all text files under a directory.
  * <p>
@@ -52,11 +54,12 @@ public class IndexFiles {
     /** Index all text files under a directory. */
     public static void main(String[] args) throws ParserConfigurationException, IOException, SAXException {
         String usage = "java org.apache.lucene.demo.IndexFiles"
-                + " [-index INDEX_PATH] [-docs DOCS_PATH] [-update]\n\n"
+                + " [-index INDEX_PATH] [-docs DOCS_PATH or -xml XML_FILE_PATH] [-update]\n\n"
                 + "This indexes the documents in DOCS_PATH, creating a Lucene index"
                 + "in INDEX_PATH that can be searched with SearchFiles";
         String indexPath = "index";
         String docsPath = null;
+        String xmlPath = null;
         boolean create = true;
         for(int i=0;i<args.length;i++) {
             if ("-index".equals(args[i])) {
@@ -67,34 +70,33 @@ public class IndexFiles {
                 i++;
             } else if ("-update".equals(args[i])) {
                 create = false;
+            } else if ("-xml".equals(args[i])){
+                xmlPath=args[i+1];
+                i++;
             }
         }
 
-        if (docsPath == null) {
+        if (docsPath == null && xmlPath == null) {
             System.err.println("Usage: " + usage);
             System.exit(1);
         }
 
+        Path xmlFile=null;
+        Path docDir=null;
+        if (xmlPath!=null){
 //        --experiment with xml
-//        File file = new File("./src/lucene/dataset/post.xml");
-//
-//        DocumentBuilder dBuilder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
-//
-//        org.w3c.dom.Document doc = dBuilder.parse(file);
-//
-//        System.out.println("Root element :" + doc.getDocumentElement().getNodeName());
-//        var list=doc.getElementsByTagName("row");
-//        // nodeList is not iterable, so we are using for loop
-//        for (int itr = 0; itr < list.getLength(); itr++) {
-//            Node post = list.item(itr);
-//            System.out.println( post.getAttributes().getNamedItem("Body").toString());
-//        }
-
-
-        final Path docDir = Paths.get(docsPath);
-        if (!Files.isReadable(docDir)) {
-            System.out.println("Document directory '" +docDir.toAbsolutePath()+ "' does not exist or is not readable, please check the path");
-            System.exit(1);
+            xmlFile = Paths.get(xmlPath);
+            if (!Files.isReadable(xmlFile)) {
+                System.out.println("xml file '" +xmlFile.toAbsolutePath()+ "' does not exist or is not readable, please check the file");
+                System.exit(1);
+            }
+        }
+        else {
+            docDir = Paths.get(docsPath);
+            if (!Files.isReadable(docDir)) {
+                System.out.println("Document directory '" + docDir.toAbsolutePath() + "' does not exist or is not readable, please check the path");
+                System.exit(1);
+            }
         }
 
         Date start = new Date();
@@ -126,7 +128,12 @@ public class IndexFiles {
             // iwc.setRAMBufferSizeMB(256.0);
 
             IndexWriter writer = new IndexWriter(dir, iwc);
-            indexDocs(writer, docDir);
+            if(xmlPath==null){
+                indexDocs(writer, docDir);
+            }
+            else{
+                indexXml(writer,xmlPath);
+            }
 
             // NOTE: if you want to maximize search performance,
             // you can optionally call forceMerge here.  This can be
@@ -144,6 +151,62 @@ public class IndexFiles {
         } catch (IOException e) {
             System.out.println(" caught a " + e.getClass() +
                     "\n with message: " + e.getMessage());
+        }
+
+    }
+
+    static void indexXml(final IndexWriter writer,String xmlPath) throws IOException, SAXException, ParserConfigurationException {
+        //        --experiment with xml
+        File file = new File(xmlPath);
+
+        DocumentBuilder dBuilder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
+
+        org.w3c.dom.Document xmldoc = dBuilder.parse(file);
+
+        NodeList list=xmldoc.getElementsByTagName("row");
+        // nodeList is not iterable, so we are using for loop
+        if (list.getLength()==0){
+            System.out.println("cannot retrieve data, is this xml dump from stackExchange/stackOverflow ?");
+        }
+        else{
+
+            Function<Node,String> tmp= node ->{if (node!=null) return node.toString(); return "";};
+            for (int itr = 0; itr < list.getLength(); itr++) {
+                Node post = list.item(itr);
+                String body= tmp.apply(post.getAttributes().getNamedItem("Body"));
+                String title=tmp.apply( post.getAttributes().getNamedItem("Title"));
+                String tags=tmp.apply(post.getAttributes().getNamedItem("Tags"));
+
+
+
+
+                Document doc = new Document();
+
+                // Add the path of the file as a field named "path".  Use a
+                // field that is indexed (i.e. searchable), but don't tokenize
+                // the field into separate words and don't index term frequency <-do index term frequence and positional information
+                // or positional information:
+                Field pathField = new TextField("title", title, Field.Store.YES);
+                doc.add(pathField);
+
+                // Add the contents of the file to a field named "contents".  Specify a Reader,
+                // so that the text of the file is tokenized and indexed, but not stored.
+                // Note that FileReader expects the file to be in UTF-8 encoding.
+                // If that's not the case searching for special characters will fail.
+                doc.add(new TextField("contents", body, Field.Store.YES));
+
+                if (writer.getConfig().getOpenMode() == OpenMode.CREATE) {
+                    // New index, so we just add the document (no old document can be there):
+                    System.out.println("adding " + title);
+                    writer.addDocument(doc);
+                } else {
+                    // Existing index (an old copy of this document may have been indexed) so
+                    // we use updateDocument instead to replace the old one matching the exact
+                    // path, if present:
+                    System.out.println("updating " + title);
+                    writer.updateDocument(new Term("title", file.toString()), doc);
+                }
+            }
         }
     }
 
