@@ -173,7 +173,7 @@ public class SearchFiles {
                     correct.append(suggestion).append(" ");
                 }
             }
-            if (!correct.isEmpty()) {
+            if (correct.toString().length()!=0) {
                 return correct.toString();
             }
         }
