@@ -157,20 +157,27 @@ public class SearchFiles {
     private static String spellCorrection(Query query, DirectSpellChecker checker, IndexSearcher searcher) throws IOException {
         if (query instanceof TermQuery) {
             Term terms = ((TermQuery) query).getTerm();
+            String t=terms.text();
             SuggestWord[] similar = checker.suggestSimilar(terms, 1, searcher.getIndexReader());
             if (similar.length > 0) {
-                return similar[0].string;
+                return similar[0].string+"/";
             }
         } else if (query instanceof BooleanQuery) {
-            StringBuilder correct = new StringBuilder();
             List<String> suggested = new ArrayList<>();
+            StringBuilder correct = new StringBuilder();
             for (BooleanClause clause : ((BooleanQuery) query).clauses()) {
                 var suggestion = spellCorrection(clause.getQuery(), checker, searcher);
                 if (suggestion.length()>0&& !suggested.contains(suggestion)) {
                     suggested.add(suggestion);
-                    correct.append(suggestion).append(" ");
+                    correct.append(suggestion);
                 }
             }
+
+            if(correct.charAt(correct.length()-1)=='/'){
+                correct.deleteCharAt(correct.length()-1);
+            }
+
+            correct.append(" ");
             if (correct.toString().length()!=0) {
                 return correct.toString();
             }
@@ -205,6 +212,7 @@ public class SearchFiles {
             //start spellChecking
             DirectSpellChecker checker = new DirectSpellChecker();
             checker.setMinPrefix(0);
+            checker.setThresholdFrequency(10f);
             String suggestion = spellCorrection(query, checker, searcher);
             if (suggestion.length() > 0) {
                 System.out.println("Do you mean : " + suggestion + "?");
