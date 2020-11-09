@@ -43,9 +43,6 @@ import java.util.Date;
 import java.util.function.Function;
 
 /** Index all text files under a directory.
- * <p>
- * This is a command-line application demonstrating simple Lucene indexing.
- * Run it with no command-line arguments for usage information.
  */
 public class IndexFiles {
 
@@ -84,7 +81,6 @@ public class IndexFiles {
         Path xmlFile=null;
         Path docDir=null;
         if (xmlPath!=null){
-//        --experiment with xml
             xmlFile = Paths.get(xmlPath);
             if (!Files.isReadable(xmlFile)) {
                 System.out.println("xml file '" +xmlFile.toAbsolutePath()+ "' does not exist or is not readable, please check the file");
@@ -107,10 +103,6 @@ public class IndexFiles {
             Analyzer analyzer = new StandardAnalyzer();
             IndexWriterConfig iwc = new IndexWriterConfig(analyzer);
 
-            //denk niet dat het hier per se moet, enkel in search is voldoende maybe
-            //iwc.setSimilarity(new ClassicSimilarity()); //tfidf
-            //iwc.setSimilarity(new BM25Similarity()); //Okapi BM25
-
             if (create) {
                 // Create a new index in the directory, removing any
                 // previously indexed documents:
@@ -120,13 +112,6 @@ public class IndexFiles {
                 iwc.setOpenMode(OpenMode.CREATE_OR_APPEND);
             }
 
-            // Optional: for better indexing performance, if you
-            // are indexing many documents, increase the RAM
-            // buffer.  But if you do this, increase the max heap
-            // size to the JVM (eg add -Xmx512m or -Xmx1g):
-            //
-            // iwc.setRAMBufferSizeMB(256.0);
-
             IndexWriter writer = new IndexWriter(dir, iwc);
             if(xmlPath==null){
                 indexDocs(writer, docDir);
@@ -134,14 +119,6 @@ public class IndexFiles {
             else{
                 indexXml(writer,xmlPath);
             }
-
-            // NOTE: if you want to maximize search performance,
-            // you can optionally call forceMerge here.  This can be
-            // a terribly costly operation, so generally it's only
-            // worth it when your index is relatively static (ie
-            // you're done adding documents to it):
-            //
-            // writer.forceMerge(1);
 
             writer.close();
 
@@ -156,7 +133,6 @@ public class IndexFiles {
     }
 
     static void indexXml(final IndexWriter writer,String xmlPath) throws IOException, SAXException, ParserConfigurationException {
-        //        --experiment with xml
         File file = new File(xmlPath);
 
         DocumentBuilder dBuilder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
@@ -182,17 +158,14 @@ public class IndexFiles {
 
                 Document doc = new Document();
 
-                // Add the path of the file as a field named "path".  Use a
+                // Add the path of the file as a field named "title".  Use a
                 // field that is indexed (i.e. searchable), but don't tokenize
-                // the field into separate words and don't index term frequency <-do index term frequence and positional information
-                // or positional information:
+                // the field into separate words and do index term frequency and positional information
                 Field pathField = new TextField("title", title, Field.Store.YES);
                 doc.add(pathField);
 
                 // Add the contents of the file to a field named "contents".  Specify a Reader,
                 // so that the text of the file is tokenized and indexed, but not stored.
-                // Note that FileReader expects the file to be in UTF-8 encoding.
-                // If that's not the case searching for special characters will fail.
                 doc.add(new TextField("contents", body, Field.Store.YES));
 
                 if (writer.getConfig().getOpenMode() == OpenMode.CREATE) {
@@ -213,13 +186,6 @@ public class IndexFiles {
     /**
      * Indexes the given file using the given writer, or if a directory is given,
      * recurses over files and directories found under the given directory.
-     *
-     * NOTE: This method indexes one document per input file.  This is slow.  For good
-     * throughput, put multiple documents into your input file(s).  An example of this is
-     * in the benchmark module, which can create "line doc" files, one document per line,
-     * using the
-     * <a href="../../../../../contrib-benchmark/org/apache/lucene/benchmark/byTask/tasks/WriteLineDocTask.html"
-     * >WriteLineDocTask</a>.
      *
      * @param writer Writer to the index where the given file/dir info will be stored
      * @param path The file to index, or the directory to recurse into to find files to index
@@ -249,26 +215,14 @@ public class IndexFiles {
             // make a new, empty document
             Document doc = new Document();
 
-            // Add the path of the file as a field named "path".  Use a
+            // Add the path of the file as a field named "title".  Use a
             // field that is indexed (i.e. searchable), but don't tokenize
-            // the field into separate words and don't index term frequency <-do index term frequence and positional information
-            // or positional information:
+            // the field into separate words and do index term frequency and positional information
             Field pathField = new TextField("title", file.getFileName().toString(), Field.Store.YES);
             doc.add(pathField);
 
-            // Add the last modified date of the file a field named "modified".
-            // Use a LongPoint that is indexed (i.e. efficiently filterable with
-            // PointRangeQuery).  This indexes to milli-second resolution, which
-            // is often too fine.  You could instead create a number based on
-            // year/month/day/hour/minutes/seconds, down the resolution you require.
-            // For example the long value 2011021714 would mean
-            // February 17, 2011, 2-3 PM.
-            doc.add(new LongPoint("modified", lastModified));
-
             // Add the contents of the file to a field named "contents".  Specify a Reader,
             // so that the text of the file is tokenized and indexed, but not stored.
-            // Note that FileReader expects the file to be in UTF-8 encoding.
-            // If that's not the case searching for special characters will fail.
             StringBuilder content= new StringBuilder();
             var reader=new BufferedReader(new InputStreamReader(stream, StandardCharsets.UTF_8));
             String line;

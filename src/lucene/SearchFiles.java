@@ -38,6 +38,7 @@ import org.apache.lucene.queryparser.classic.MultiFieldQueryParser;
 import org.apache.lucene.queryparser.classic.QueryParser;
 import org.apache.lucene.search.*;
 import org.apache.lucene.search.similarities.BM25Similarity;
+import org.apache.lucene.search.similarities.BooleanSimilarity;
 import org.apache.lucene.search.similarities.ClassicSimilarity;
 import org.apache.lucene.search.spell.DirectSpellChecker;
 import org.apache.lucene.search.spell.SuggestWord;
@@ -56,7 +57,7 @@ public class SearchFiles {
      */
     public static void main(String[] args) throws Exception {
         String usage =
-                "Usage:\tjava src.lucene.SearchFiles [-index dir] [-field f] [-repeat n] [-queries file] [-query string] [-raw] [-paging hitsPerPage]\n\nSee http://lucene.apache.org/core/4_1_0/demo/ for details.";
+                "Usage:\tjava src.lucene.SearchFiles [-index dir] [-field f] [-repeat n] [-queries file] [-query string] [-paging hitsPerPage]\n\nSee http://lucene.apache.org/core/4_1_0/demo/ for details.";
         if (args.length > 0 && ("-h".equals(args[0]) || "-help".equals(args[0]))) {
             System.out.println(usage);
             System.exit(0);
@@ -66,7 +67,6 @@ public class SearchFiles {
         String field = "contents";
         String queries = null;
         int repeat = 0;
-        boolean raw = false;
         String queryString = null;
         int hitsPerPage = 10;
 
@@ -86,8 +86,6 @@ public class SearchFiles {
             } else if ("-repeat".equals(args[i])) {
                 repeat = Integer.parseInt(args[i + 1]);
                 i++;
-            } else if ("-raw".equals(args[i])) {
-                raw = true;
             } else if ("-paging".equals(args[i])) {
                 hitsPerPage = Integer.parseInt(args[i + 1]);
                 if (hitsPerPage <= 0) {
@@ -100,13 +98,13 @@ public class SearchFiles {
         IndexReader reader = DirectoryReader.open(FSDirectory.open(Paths.get(index)));
         IndexSearcher searcher = new IndexSearcher(reader);
         Scanner myObj = new Scanner(System.in);  // Create a Scanner object
-        System.out.println("Press a number to choose a document ranking model: 1:tfidf 2:Okapi BM25 other:default (Boolean?)");
+        System.out.println("Press a number to choose a document ranking model: 1:tfidf 2:Boolean other:default (Okapi BM25)");
 
         String model = myObj.nextLine();  // Read user input
         if (model.equals("1")) {
             searcher.setSimilarity(new ClassicSimilarity()); //tfidf
         } else if (model.equals("2")) {
-            searcher.setSimilarity(new BM25Similarity()); //Okapi BM25
+            searcher.setSimilarity(new BooleanSimilarity()); //Boolean
         }
 
         Analyzer analyzer = new StandardAnalyzer();
@@ -146,7 +144,7 @@ public class SearchFiles {
                 System.out.println("Time: " + (end.getTime() - start.getTime()) + "ms");
             }
 
-            doPagingSearch(in, searcher, query, hitsPerPage, raw, queries == null && queryString == null);
+            doPagingSearch(in, searcher, query, hitsPerPage, queries == null && queryString == null);
 
             if (queryString != null) {
                 break;
@@ -190,7 +188,7 @@ public class SearchFiles {
      * is executed another time and all hits are collected.
      */
     public static void doPagingSearch(BufferedReader in, IndexSearcher searcher, Query query,
-                                      int hitsPerPage, boolean raw, boolean interactive) throws IOException {
+                                      int hitsPerPage, boolean interactive) throws IOException {
 
         // Collect enough docs to show 5 pages
         TopDocs results = searcher.search(query, 5 * hitsPerPage);
@@ -228,10 +226,6 @@ public class SearchFiles {
             end = Math.min(hits.length, start + hitsPerPage);
 
             for (int i = start; i < end; i++) {
-                //if (raw) {                              // output raw format
-                //System.out.println("doc="+hits[i].doc+" score="+hits[i].score);
-                //continue;
-                //}
 
                 Document doc = searcher.doc(hits[i].doc);
                 String path = doc.get("title");
