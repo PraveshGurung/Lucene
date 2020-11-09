@@ -57,14 +57,13 @@ public class SearchFiles {
      */
     public static void main(String[] args) throws Exception {
         String usage =
-                "Usage:\tjava src.lucene.SearchFiles [-index dir] [-field f] [-repeat n] [-queries file] [-query string] [-paging hitsPerPage]\n\nSee http://lucene.apache.org/core/4_1_0/demo/ for details.";
+                "Usage:\tjava src.lucene.SearchFiles [-index dir] [-repeat n] [-queries file] [-query string] [-paging hitsPerPage]\n\nSee http://lucene.apache.org/core/4_1_0/demo/ for details.";
         if (args.length > 0 && ("-h".equals(args[0]) || "-help".equals(args[0]))) {
             System.out.println(usage);
             System.exit(0);
         }
 
         String index = "index";
-        String field = "contents";
         String queries = null;
         int repeat = 0;
         String queryString = null;
@@ -74,10 +73,7 @@ public class SearchFiles {
             if ("-index".equals(args[i])) {
                 index = args[i + 1];
                 i++;
-            } else if ("-field".equals(args[i])) {
-                field = args[i + 1];
-                i++;
-            } else if ("-queries".equals(args[i])) {
+            }else if ("-queries".equals(args[i])) {
                 queries = args[i + 1];
                 i++;
             } else if ("-query".equals(args[i])) {
