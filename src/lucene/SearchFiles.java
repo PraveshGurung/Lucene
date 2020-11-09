@@ -206,6 +206,7 @@ public class SearchFiles {
         if (numTotalHits == 0) {
             //start spellChecking
             DirectSpellChecker checker = new DirectSpellChecker();
+            checker.setMinPrefix(0);
             String suggestion = spellCorrection(query, checker, searcher);
             if (suggestion.length() > 0) {
                 System.out.println("Do you mean : " + suggestion + "?");
