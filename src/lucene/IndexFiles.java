@@ -149,9 +149,13 @@ public class IndexFiles {
             Function<Node,String> tmp= node ->{if (node!=null) return node.toString(); return "";};
             for (int itr = 0; itr < list.getLength(); itr++) {
                 Node post = list.item(itr);
+
+                String questionOrAnswer=tmp.apply(post.getAttributes().getNamedItem("PostTypeId"));
+                if (!questionOrAnswer.equals("PostTypeId=\"1\"")){
+                    continue;
+                }
                 String body= tmp.apply(post.getAttributes().getNamedItem("Body"));
                 String title=tmp.apply( post.getAttributes().getNamedItem("Title"));
-                String tags=tmp.apply(post.getAttributes().getNamedItem("Tags"));
 
 
 
